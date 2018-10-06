@@ -17,17 +17,46 @@ package com.google.firebase.udacity.friendlychat;
 
 public class FriendlyMessage {
 
+    private String id;
     private String text;
     private String name;
     private String photoUrl;
 
+    @Override
+    public boolean equals(Object obj) {
+
+        // If the object is compared with itself
+        if (obj == this) {
+            return true;
+        }
+
+        // Check if obj is an instance of FriendlyMessage or not
+        if (!(obj instanceof FriendlyMessage)) {
+            return false;
+        }
+
+        // Cast obj to FriendlyMessage
+        FriendlyMessage friendlyMessage = (FriendlyMessage) obj;
+
+        // Compare the message id's
+        return this.id.equals(friendlyMessage.id);
+    }
+
     public FriendlyMessage() {
     }
 
-    public FriendlyMessage(String text, String name, String photoUrl) {
+    FriendlyMessage(String text, String name, String photoUrl) {
         this.text = text;
         this.name = name;
         this.photoUrl = photoUrl;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
     }
 
     public String getText() {

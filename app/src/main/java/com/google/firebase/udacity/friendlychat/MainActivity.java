@@ -78,6 +78,8 @@ public class MainActivity extends AppCompatActivity {
 
     private String mUsername;
 
+    List<FriendlyMessage> mFriendlyMessages = new ArrayList<>();
+
     // Firebase instance variables
     private FirebaseDatabase mFirebaseDatabase;
     private ChildEventListener mChildEventListener;
@@ -115,8 +117,7 @@ public class MainActivity extends AppCompatActivity {
         mSendButton = (Button) findViewById(R.id.sendButton);
 
         // Initialize message ListView and its adapter
-        List<FriendlyMessage> friendlyMessages = new ArrayList<>();
-        mMessageAdapter = new MessageAdapter(this, R.layout.item_message, friendlyMessages);
+        mMessageAdapter = new MessageAdapter(this, R.layout.item_message, mFriendlyMessages);
         mMessageListView.setAdapter(mMessageAdapter);
 
         // Initialize progress bar
@@ -159,7 +160,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 FriendlyMessage friendlyMessage = new FriendlyMessage(mMessageEditText.getText().toString(), mUsername, null);
-                mMessagesDatabaseReference.push().setValue(friendlyMessage);
+                sendFriendlyMessage(friendlyMessage);
 
                 // Clear input box
                 mMessageEditText.setText("");
@@ -226,7 +227,7 @@ public class MainActivity extends AppCompatActivity {
                         Uri downloadUrl = taskSnapshot.getDownloadUrl();
                         FriendlyMessage friendlyMessage =
                                 new FriendlyMessage(null, mUsername, downloadUrl.toString());
-                        mMessagesDatabaseReference.push().setValue(friendlyMessage);
+                        sendFriendlyMessage(friendlyMessage);
                     }
                 });
             }
@@ -276,12 +277,16 @@ public class MainActivity extends AppCompatActivity {
                 @Override
                 public void onChildAdded(DataSnapshot dataSnapshot, String s) {
                     FriendlyMessage friendlyMessage = dataSnapshot.getValue(FriendlyMessage.class);
-                    mMessageAdapter.add(friendlyMessage);
+                    mFriendlyMessages.add(friendlyMessage);
+                    mMessageAdapter.notifyDataSetChanged();
                 }
 
                 @Override
                 public void onChildChanged(DataSnapshot dataSnapshot, String s) {
-
+                    FriendlyMessage newMessage = dataSnapshot.getValue(FriendlyMessage.class);
+                    int messagePosition = mFriendlyMessages.indexOf(newMessage);
+                    mFriendlyMessages.set(messagePosition, newMessage);
+                    mMessageAdapter.notifyDataSetChanged();
                 }
 
                 @Override
@@ -351,5 +356,11 @@ public class MainActivity extends AppCompatActivity {
                 new InputFilter.LengthFilter(friendly_msg_length.intValue())
         });
         Log.d(TAG, FRIENDLY_MSG_LENGTH_KEY + " = " + friendly_msg_length);
+    }
+
+    private void sendFriendlyMessage(FriendlyMessage friendlyMessage) {
+        String messageId = mMessagesDatabaseReference.push().getKey();
+        friendlyMessage.setId(messageId);
+        mMessagesDatabaseReference.child(messageId).setValue(friendlyMessage);
     }
 }
